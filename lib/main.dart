@@ -16,6 +16,7 @@ void main() async {
   await DatabaseCreator().initDatabase();
   runApp(MyApp());
 }
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -42,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final _formKey = GlobalKey<FormState>();
   Future<List<Todo>> future;
   String name;
+  TextEditingController _editingController = new TextEditingController();
   int id;
 
   @override
@@ -62,18 +64,32 @@ class _MyHomePageState extends State<MyHomePage> {
       future = RepositoryServiceTodo.getAllTodos();
     });
   }
+  updateTodo(Todo todo) async {
+    id = todo.id;
+    name = todo.name;
+    setState(() {
+      _editingController.text = todo.name;
+    });
+  }
 
   void createTodo() async {
     if (_formKey.currentState.validate()) {
       _formKey.currentState.save();
-      int count = await RepositoryServiceTodo.todosCount();
-      final todo = Todo(count, name, randomTodo(), false);
-      await RepositoryServiceTodo.addTodo(todo);
-      setState(() {
-        id = todo.id;
-        future = RepositoryServiceTodo.getAllTodos();
-      });
-      print(todo.id);
+      if(id == null) {
+        int count = await RepositoryServiceTodo.todosCount();
+        final todo = Todo(count, name, randomTodo(), false);
+        await RepositoryServiceTodo.addTodo(todo);
+        setState(() {
+          future = RepositoryServiceTodo.getAllTodos();
+        });
+      }else{
+        final todo = Todo(id, name, randomTodo(), false);
+        await RepositoryServiceTodo.updateTodo(todo);
+        setState(() {
+          id = null;
+          future = RepositoryServiceTodo.getAllTodos();
+        });
+      }
     }
   }
 
@@ -143,6 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget buildTextFormField() {
     return TextFormField(
+      controller: _editingController,
       decoration: InputDecoration(
         border: InputBorder.none,
         hintText: 'name',
@@ -177,12 +194,12 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
-                /*FlatButton(
+                FlatButton(
                   onPressed: () => updateTodo(todo),
                   child: Text('Update todo',
                       style: TextStyle(color: Colors.white)),
                   color: Colors.green,
-                ),*/
+                ),
                 SizedBox(width: 8),
                 FlatButton(
                   onPressed: () => deleteTodo(todo),

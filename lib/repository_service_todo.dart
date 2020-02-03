@@ -34,9 +34,20 @@ class RepositoryServiceTodo {
       ${DatabaseCreator.isDeleted}
     )
     VALUES (?,?,?,?)''';
-    List<dynamic> params = [todo.id, todo.name, todo.info, todo.isDeleted ? 1 : 0];
+    List<dynamic> params = [
+      todo.id,
+      todo.name,
+      todo.info,
+      todo.isDeleted ? 1 : 0
+    ];
     final result = await db.rawInsert(sql, params);
     DatabaseCreator.databaseLog('Add todo', sql, null, result, params);
+  }
+
+  static Future<void> updateTodo(Todo todo) async {
+    final sql = '''UPDATE ${DatabaseCreator.todoTable}  SET ${DatabaseCreator.name} = '${todo.name}', ${DatabaseCreator.info} = '${todo.info}', ${DatabaseCreator.isDeleted} = ${todo.isDeleted ? 1 : 0} WHERE ${DatabaseCreator.id} = ${todo.id}''';
+    final result = await db.rawQuery(sql);
+    DatabaseCreator.databaseLog('Update todo', sql, null, null, null);
   }
 
   static Future<void> deleteTodo(Todo todo) async {
@@ -44,11 +55,12 @@ class RepositoryServiceTodo {
     SET ${DatabaseCreator.isDeleted} = 1
     WHERE ${DatabaseCreator.id} == ${todo.id}''';
     final result = await db.rawUpdate(sql);
-    DatabaseCreator.databaseLog("Delete Todo", sql,null,result);
+    DatabaseCreator.databaseLog("Delete Todo", sql, null, result);
   }
 
   static Future<int> todosCount() async {
-    final data = await db.rawQuery('''SELECT COUNT(*) FROM ${DatabaseCreator.todoTable}''');
+    final data = await db
+        .rawQuery('''SELECT COUNT(*) FROM ${DatabaseCreator.todoTable}''');
 
     int count = data[0].values.elementAt(0);
     int idForNewItem = count++;
